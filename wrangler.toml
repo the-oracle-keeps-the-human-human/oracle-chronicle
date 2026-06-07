@@ -1,0 +1,11 @@
+name = "oracle-chronicle"
+main = "src/worker.ts"
+compatibility_date = "2025-06-01"
+account_id = "a5eabdc2b11aae9bd5af46bd6a88179e"
+
+[[kv_namespaces]]
+binding = "CHRONICLE"
+id = "e0d36fd165a94700ad5a8dad3971066b"
+
+[observability]
+enabled = true
