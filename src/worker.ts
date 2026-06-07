@@ -117,241 +117,122 @@ function renderDashboard(events: any[]): string {
   const feedItems = events.slice(0, 50).map(e => {
     const color = oracleColor(e.oracle);
     const content = e.data?.content || e.data?.title || e.data?.message || e.type || "";
-    const detail = content.length > 120 ? content.slice(0, 120) + "..." : content;
+    const detail = content.length > 160 ? content.slice(0, 160) + "..." : content;
     const sender = e.data?.sender || e.data?.author || "";
     const url = e.data?.url || "";
     const time = e.ts?.slice(11, 19) || "";
     const ago = timeAgo(e.ts);
 
-    return `<article class="event">
-      <div class="event-bar" style="background:${color}"></div>
-      <div class="event-body">
-        <div class="event-header">
-          <span class="oracle-tag" style="color:${color}">${e.oracle}</span>
-          <span class="event-type">${e.type}</span>
-          <time class="event-time" title="${e.ts}">${time} · ${ago} ago</time>
-        </div>
-        <p class="event-content">${sender ? `<span class="sender">${sender}</span> ` : ""}${url ? `<a href="${url}" target="_blank" rel="noopener">${detail}</a>` : detail}</p>
-      </div>
-    </article>`;
+    return `<tr class="ev-row">
+      <td class="ev-time"><time title="${e.ts}">${time}</time><span class="ago">${ago}</span></td>
+      <td class="ev-oracle" style="color:${color}">${e.oracle}</td>
+      <td class="ev-type">${e.type}</td>
+      <td class="ev-detail">${sender ? `<span class="ev-sender">${sender}</span> ` : ""}${url ? `<a href="${url}" target="_blank">${detail}</a>` : detail}</td>
+    </tr>`;
   }).join("");
 
   const oracleTags = oracles.map(o =>
-    `<span class="oracle-chip" style="border-color:${oracleColor(o)};color:${oracleColor(o)}">${o}</span>`
-  ).join("");
+    `<span class="chip" style="color:${oracleColor(o)}">${o}</span>`
+  ).join(" ");
 
   return `<!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a1410">
 <title>Oracle Chronicle</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#1a1410;--sf:#231b14;--sf2:#2d2219;--ln:#3d2f22;
+  --ink:#f5ead9;--ink2:#d4c4a8;--dim:#9a8a72;
+  --gold:#f0b73d;--sky:#8db8d8;--sage:#9bc28b;--rose:#e89999;--plum:#c89eda;--cyan:#7dd3c0;
+}
+html{font-size:clamp(14px,1.1vw,16px);-webkit-font-smoothing:antialiased}
+body{
+  font-family:'JetBrains Mono',ui-monospace,monospace;
+  background:var(--bg);color:var(--ink);line-height:1.7;
+  min-height:100dvh;padding:clamp(1rem,3vw,2.5rem);
+}
+::selection{background:var(--gold);color:var(--bg)}
+a{color:var(--gold);text-decoration:none}
+a:hover{color:#fcd880;text-decoration:underline}
 
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+.wrap{max-width:1200px;margin:0 auto}
 
-  :root {
-    --bg: #0a0a0b;
-    --surface: #141416;
-    --surface-2: #1c1c1f;
-    --border: #2a2a2e;
-    --text: #e4e4e7;
-    --text-dim: #71717a;
-    --accent: #f7931a;
-    --link: #60a5fa;
-    --font: 'JetBrains Mono', ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
-    --radius: 6px;
-    --max-w: 960px;
-  }
+header{padding:0 0 1.5rem;border-bottom:1px dashed var(--ln);margin-bottom:1.5rem}
+h1{font-size:clamp(1.6rem,3vw,2.4rem);font-weight:700;color:var(--gold);letter-spacing:-.02em}
+.sub{color:var(--dim);font-size:.85rem;margin-top:.25rem}
 
-  html { font-size: 15px; -webkit-font-smoothing: antialiased; }
-  body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; }
+.stats{display:flex;gap:2.5rem;margin-top:1.2rem;flex-wrap:wrap}
+.st{display:flex;align-items:baseline;gap:.4rem}
+.st b{font-size:1.8rem;color:var(--ink)}
+.st span{font-size:.75rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
 
-  /* Header */
-  header {
-    border-bottom: 1px solid var(--border);
-    padding: 2.5rem 1.5rem 2rem;
-    max-width: var(--max-w);
-    margin: 0 auto;
-  }
-  header h1 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    color: var(--text);
-  }
-  header h1 span { color: var(--accent); }
-  .subtitle {
-    color: var(--text-dim);
-    font-size: 0.8rem;
-    margin-top: 0.25rem;
-    font-weight: 300;
-  }
+.chips{margin-top:1rem;display:flex;gap:.6rem;flex-wrap:wrap}
+.chip{font-size:.8rem;font-weight:500}
 
-  /* Stats row */
-  .stats {
-    display: flex;
-    gap: 2rem;
-    margin-top: 1.25rem;
-    flex-wrap: wrap;
-  }
-  .stat-item { display: flex; align-items: baseline; gap: 0.4rem; }
-  .stat-num { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
-  .stat-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+h2{font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;color:var(--dim);margin:1.5rem 0 .6rem;font-weight:500}
 
-  /* Oracle chips */
-  .oracles {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    margin-top: 1rem;
-  }
-  .oracle-chip {
-    font-size: 0.7rem;
-    padding: 0.15rem 0.5rem;
-    border: 1px solid;
-    border-radius: 999px;
-    font-weight: 500;
-  }
+table{width:100%;border-collapse:collapse}
+.ev-row{border-bottom:1px solid var(--ln)}
+.ev-row:hover{background:var(--sf)}
+.ev-row td{padding:.5rem .6rem;vertical-align:top;font-size:.85rem}
+.ev-time{white-space:nowrap;color:var(--ink2);width:7rem}
+.ev-time .ago{color:var(--dim);margin-left:.4rem;font-size:.75rem}
+.ev-oracle{font-weight:700;text-transform:uppercase;font-size:.75rem;letter-spacing:.03em;width:7rem}
+.ev-type{color:var(--dim);font-size:.75rem;width:10rem}
+.ev-detail{color:var(--ink);line-height:1.5;word-break:break-word}
+.ev-sender{color:var(--ink2);font-weight:500}
 
-  /* Feed */
-  main {
-    max-width: var(--max-w);
-    margin: 0 auto;
-    padding: 1rem 1.5rem 4rem;
-  }
-  .section-label {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-dim);
-    margin: 1.5rem 0 0.75rem;
-    font-weight: 500;
-  }
+.api{margin-top:2rem;padding-top:1.5rem;border-top:1px dashed var(--ln)}
+.api-row{display:flex;gap:1rem;padding:.2rem 0;font-size:.8rem}
+.api-m{color:var(--gold);font-weight:700;min-width:3.5rem}
+.api-p{color:var(--ink2)}
 
-  /* Event card */
-  .event {
-    display: flex;
-    gap: 0;
-    margin-bottom: 2px;
-    background: var(--surface);
-    border-radius: var(--radius);
-    overflow: hidden;
-    transition: background 0.15s;
-  }
-  .event:hover { background: var(--surface-2); }
-  .event-bar { width: 3px; flex-shrink: 0; }
-  .event-body { padding: 0.6rem 0.8rem; flex: 1; min-width: 0; }
-  .event-header {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin-bottom: 0.2rem;
-  }
-  .oracle-tag {
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-  }
-  .event-type {
-    font-size: 0.65rem;
-    color: var(--text-dim);
-    background: var(--bg);
-    padding: 0.05rem 0.35rem;
-    border-radius: 3px;
-  }
-  .event-time {
-    font-size: 0.65rem;
-    color: var(--text-dim);
-    margin-left: auto;
-    white-space: nowrap;
-  }
-  .event-content {
-    font-size: 0.8rem;
-    color: var(--text);
-    line-height: 1.5;
-    word-break: break-word;
-    font-weight: 300;
-  }
-  .event-content a { color: var(--link); text-decoration: none; }
-  .event-content a:hover { text-decoration: underline; }
-  .sender { color: var(--text-dim); font-weight: 500; }
+footer{margin-top:2rem;padding-top:1rem;border-top:1px dashed var(--ln);text-align:center;font-size:.75rem;color:var(--dim)}
 
-  /* API section */
-  .api-section {
-    max-width: var(--max-w);
-    margin: 0 auto;
-    padding: 0 1.5rem 2rem;
-    border-top: 1px solid var(--border);
-  }
-  .api-grid {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.3rem 1rem;
-    font-size: 0.75rem;
-    margin-top: 1rem;
-  }
-  .api-method {
-    color: var(--accent);
-    font-weight: 600;
-  }
-  .api-path { color: var(--text-dim); }
-
-  /* Footer */
-  footer {
-    max-width: var(--max-w);
-    margin: 0 auto;
-    padding: 1.5rem;
-    text-align: center;
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    border-top: 1px solid var(--border);
-  }
-
-  /* Responsive */
-  @media (max-width: 640px) {
-    header, main, .api-section, footer { padding-left: 1rem; padding-right: 1rem; }
-    .stats { gap: 1.2rem; }
-    .event-header { flex-wrap: wrap; }
-    .event-time { margin-left: 0; }
-  }
+@media(max-width:640px){
+  .ev-type{display:none}
+  .ev-time{width:5rem}
+  .ev-oracle{width:5rem}
+  .stats{gap:1.5rem}
+}
 </style>
 </head>
 <body>
+<div class="wrap">
 
 <header>
-  <h1><span>chronicle</span> — oracle event feed</h1>
-  <p class="subtitle">the-oracle-keeps-the-human-human · nothing is deleted</p>
+  <h1>chronicle</h1>
+  <p class="sub">the-oracle-keeps-the-human-human &middot; nothing is deleted</p>
   <div class="stats">
-    <div class="stat-item"><span class="stat-num">${events.length}</span><span class="stat-label">events</span></div>
-    <div class="stat-item"><span class="stat-num">${oracles.length}</span><span class="stat-label">oracles</span></div>
-    <div class="stat-item"><span class="stat-num">${todayCount}</span><span class="stat-label">today</span></div>
+    <div class="st"><b>${events.length}</b><span>events</span></div>
+    <div class="st"><b>${oracles.length}</b><span>oracles</span></div>
+    <div class="st"><b>${todayCount}</b><span>today</span></div>
   </div>
-  <div class="oracles">${oracleTags}</div>
+  <div class="chips">${oracleTags}</div>
 </header>
 
-<main>
-  <p class="section-label">latest events</p>
-  ${feedItems || '<p style="color:var(--text-dim);font-size:0.8rem">No events yet — POST /api/record to start</p>'}
-</main>
+<h2>latest events</h2>
+<table>${feedItems || '<tr><td colspan="4" style="color:var(--dim);padding:1rem">No events yet</td></tr>'}</table>
 
-<div class="api-section">
-  <p class="section-label">api</p>
-  <div class="api-grid">
-    <span class="api-method">POST</span><span class="api-path">/api/record — record an event</span>
-    <span class="api-method">POST</span><span class="api-path">/github-hooks — github webhook</span>
-    <span class="api-method">GET</span><span class="api-path">/api/feed — all events</span>
-    <span class="api-method">GET</span><span class="api-path">/api/oracle/:name/feed — by oracle</span>
-    <span class="api-method">GET</span><span class="api-path">/api/date/:YYYY-MM-DD/feed — by date</span>
-    <span class="api-method">GET</span><span class="api-path">/api/type/:type/feed — by type</span>
-    <span class="api-method">GET</span><span class="api-path">/api/cursor/:oracle/:channel — sync cursor</span>
-  </div>
+<div class="api">
+  <h2>api</h2>
+  <div class="api-row"><span class="api-m">POST</span><span class="api-p">/api/record &mdash; record an event</span></div>
+  <div class="api-row"><span class="api-m">POST</span><span class="api-p">/github-hooks &mdash; github webhook</span></div>
+  <div class="api-row"><span class="api-m">GET</span><span class="api-p">/api/feed &mdash; all events</span></div>
+  <div class="api-row"><span class="api-m">GET</span><span class="api-p">/api/oracle/:name/feed &mdash; by oracle</span></div>
+  <div class="api-row"><span class="api-m">GET</span><span class="api-p">/api/date/:YYYY-MM-DD/feed &mdash; by date</span></div>
+  <div class="api-row"><span class="api-m">GET</span><span class="api-p">/api/cursor/:oracle/:channel &mdash; sync cursor</span></div>
 </div>
 
-<footer>oracle chronicle · auto-refresh 60s · timestamp is truth</footer>
-<script>setTimeout(()=>location.reload(), 60000)</script>
+<footer>oracle chronicle &middot; auto-refresh 60s &middot; timestamp is truth</footer>
+<script>setTimeout(()=>location.reload(),60000)</script>
+
+</div>
 </body>
 </html>`;
 }
