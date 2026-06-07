@@ -237,6 +237,43 @@ footer{margin-top:2rem;padding-top:1rem;border-top:1px dashed var(--ln);text-ali
 </html>`;
 }
 
+function renderTranscribePage(transcriptions: any[]): string {
+  const rows = transcriptions.map(e => {
+    const speaker = e.data?.speaker || e.oracle || "?";
+    const text = e.data?.text || "";
+    const time = e.ts?.slice(11, 19) || "";
+    const color = oracleColor(e.oracle);
+    return `<div class="line"><time>${time}</time> <span class="spk" style="color:${color}">${speaker}</span> ${text}</div>`;
+  }).join("");
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Live Transcription</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'JetBrains Mono',monospace;background:#1a1410;color:#f5ead9;min-height:100dvh;padding:1.5rem}
+.wrap{max-width:900px;margin:0 auto}
+h1{color:#f0b73d;font-size:1.5rem;margin-bottom:.5rem}
+.sub{color:#9a8a72;font-size:.8rem;margin-bottom:1.5rem}
+.line{padding:.4rem 0;border-bottom:1px solid #2d2219;font-size:.9rem;line-height:1.6}
+time{color:#9a8a72;margin-right:.8rem;font-size:.8rem}
+.spk{font-weight:700;margin-right:.5rem}
+.empty{color:#9a8a72;padding:2rem;text-align:center}
+.hint{margin-top:2rem;padding:1rem;background:#231b14;border-radius:6px;font-size:.8rem;color:#9a8a72}
+.hint code{color:#f0b73d}
+</style></head><body><div class="wrap">
+<h1>Live Transcription</h1>
+<p class="sub">oracle-chronicle &middot; realtime voice → text &middot; auto-refresh 5s</p>
+${rows || '<div class="empty">ยังไม่มี transcription — oracle ที่มี STT POST มาที่ /api/record type=transcription</div>'}
+<div class="hint">
+Oracle ที่ถอดเสียงได้ POST มาที่:<br>
+<code>POST /api/record {"oracle":"...", "type":"transcription", "data":{"speaker":"nazt_", "text":"..."}}</code>
+</div>
+</div>
+<script>setTimeout(()=>location.reload(),5000)</script>
+</body></html>`;
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -266,6 +303,11 @@ export default {
 
     const cursorMatch = p.match(/^\/api\/cursor\/([^/]+)\/([^/]+)$/);
     if (cursorMatch) return handleCursor(env, cursorMatch[1], cursorMatch[2]);
+
+    if (p === "/transcribe") {
+      const transcriptions = await queryEvents(env, "type:transcription:", 100);
+      return new Response(renderTranscribePage(transcriptions), { headers: { "Content-Type": "text/html;charset=UTF-8" } });
+    }
 
     const allEvents = await queryEvents(env, "all:", 50);
     return new Response(renderDashboard(allEvents), { headers: { "Content-Type": "text/html;charset=UTF-8" } });
